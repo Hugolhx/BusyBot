@@ -1,0 +1,113 @@
+#!/usr/bin/python3 
+
+# Import de la classe Buzzer du module gpiozero
+from gpiozero import Buzzer
+# Import de la fonction sleep() du module time
+from time import sleep
+# Importation du module paho-mqtt
+import paho.mqtt.client as mqtt
+# Importation des bes boutons
+from gpiozero import Button
+
+
+# Definition du client 
+
+client = mqtt.Client('Busy')
+client.username_pw_set('L1','busybot')
+client.connect('192.168.107.180')
+
+##################### BOUTON ROUGE #####################################
+
+
+# Fonction callback d'appui sur le bouton
+def boutonR():
+
+	# Lorsque le bouton est enclenche le message suivant apparait
+	print("APPUI ROUGE")
+	client.publish('REPONSE','REFUSE')
+
+# Fonction callback de maintien de l'appui sur le bouton
+def maintienR():
+	print("MAINTIEN")
+	client.publish('REPONSE','INDISPONIBLE')
+
+#######################################################################
+
+############################# BOUTON VERT ##################################
+# Fonction callback d'appui sur le bouton
+def boutonV():
+
+	# Lorsque le bouton est enclenche le message suivant apparait
+	print("APPUI VERT")
+	client.publish('REPONSE','ENTREZ')
+
+###########################################################################
+
+############################## BOUTON JAUNE ###############################
+
+# Fonction callback d'appui sur le bouton
+def boutonJ():
+
+	# Lorsque le bouton est enclenche le message suivant apparait
+	print("APPUI JAUNE")
+	client.publish('REPONSE','VEUILLEZ PATIENTER')
+
+############################################################################
+
+# Instanciation de l'objet bouton
+# ParamÃƒÂ¨tre du constructeur :
+#   NÃ‚Â° du port GPIO du bouton
+btnR = Button(14)
+btnJ = Button(23)
+btnV = Button(25)
+
+# RÃƒÂ©glage du temps de maintien ÃƒÂ  3 secondes
+btnR.hold_time = 3
+
+# Armement des fonctions callback
+btnR.when_pressed = boutonR
+btnR.when_held = maintienR
+
+btnV.when_pressed = boutonV
+
+btnJ.when_pressed = boutonJ
+
+# Instanciation de l'objet Buzzer
+# ParamÃ¨tre du constructeur :
+#     NÂ° de port GPIO du buzzer
+bz = Buzzer(16)
+
+# Abonnement a un topic 
+# Fonction callback pour l'arrivee d'un message
+
+def on_message(client, userdata, message):
+	print(" message recu " ,str(message.payload.decode("utf-8")))
+	for b in range(10):
+		bz.on()
+		sleep(0.02)
+		bz.off()
+		sleep(0.015)
+
+		bz.on()
+		sleep(0.02)
+		bz.off()
+		sleep(0.015)
+
+
+# Armement de la fonction callback de reception de message
+	
+client.on_message = on_message
+
+# Abonnement du client au topic APPEL
+
+client.subscribe('APPEL')
+
+while True:
+	client.loop()
+
+
+
+# Boucle principale du programme
+while True:
+    # ne rien faire...
+	pass
